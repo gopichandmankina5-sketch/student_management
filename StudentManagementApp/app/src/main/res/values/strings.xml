@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Student Management</string>
+
+    <!-- Auth -->
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="logout">Logout</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="full_name">Full Name</string>
+    <string name="roll_number">Roll Number</string>
+    <string name="department">Department</string>
+    <string name="year_semester">Year / Semester</string>
+    <string name="btn_login">Login</string>
+    <string name="btn_create_account">Create Account</string>
+    <string name="btn_save_profile">Save Profile</string>
+    <string name="no_account">Don\'t have an account? </string>
+    <string name="sign_up">Sign Up</string>
+    <string name="have_account">Already have an account? </string>
+    <string name="sign_in">Sign In</string>
+    <string name="welcome_back">Welcome back</string>
+    <string name="sign_in_continue">Sign in to continue</string>
+    <string name="create_account">Create Account</string>
+    <string name="join_platform">Join the student platform</string>
+
+    <!-- Dashboard -->
+    <string name="welcome_student">Welcome, %1$s 👋</string>
+    <string name="dashboard_subtitle">Here\'s your academic overview</string>
+    <string name="attendance">Attendance</string>
+    <string name="courses">Courses</string>
+    <string name="assignments">Assignments</string>
+    <string name="notifications">Notifications</string>
+    <string name="profile">Profile</string>
+    <string name="quick_actions">Quick Actions</string>
+    <string name="recent_activity">Recent Activity</string>
+    <string name="enrolled_courses">Enrolled Courses</string>
+    <string name="upcoming_assignments">Upcoming Assignments</string>
+    <string name="overall_attendance">Overall Attendance</string>
+
+    <!-- Profile -->
+    <string name="student_profile">Student Profile</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="view_profile">View Profile</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="cancel">Cancel</string>
+    <string name="profile_saved">Profile saved successfully</string>
+
+    <!-- Validation errors -->
+    <string name="error_name_empty">Name cannot be empty</string>
+    <string name="error_roll_empty">Roll number cannot be empty</string>
+    <string name="error_email_invalid">Please enter a valid email address</string>
+    <string name="error_password_short">Password must be at least 6 characters</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <string name="error_department_empty">Department cannot be empty</string>
+    <string name="error_year_empty">Year/Semester cannot be empty</string>
+    <string name="error_email_exists">An account with this email already exists</string>
+    <string name="error_invalid_credentials">Invalid email or password</string>
+    <string name="error_network">Network unavailable. Please check your connection</string>
+    <string name="error_server">Server error. Please try again later</string>
+    <string name="error_generic">Something went wrong. Please try again</string>
+
+    <!-- Notifications (mock) -->
+    <string name="notif_assignment_due">📝 Assignment due tomorrow</string>
+    <string name="notif_attendance">📊 Attendance record updated</string>
+    <string name="notif_grade">🎓 Grade posted for Data Structures</string>
+
+    <!-- Coming soon -->
+    <string name="coming_soon">This feature will be available soon</string>
+    <string name="feature_by_team">Developed by team members</string>
+</resources>

@@ -1,0 +1,66 @@
+[
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\drawable_bg_nav_card.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\drawable\\bg_nav_card.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\layout_activity_register.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\layout\\activity_register.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\drawable_bg_gradient.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\drawable\\bg_gradient.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\layout_activity_dashboard.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\layout\\activity_dashboard.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\drawable_bg_card_red.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\drawable\\bg_card_red.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\layout_activity_splash.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\layout\\activity_splash.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\drawable_bg_card_amber.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\drawable\\bg_card_amber.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\layout_activity_login.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\layout\\activity_login.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\layout_activity_profile.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\layout\\activity_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\drawable_bg_splash.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\drawable\\bg_splash.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\drawable_bg_card_blue.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\drawable\\bg_card_blue.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\drawable_bg_icon_circle.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\drawable\\bg_icon_circle.xml"
+    },
+    {
+        "merged": "com.example.studentmanagement.app-debug-42:/layout_activity_login.xml.flat",
+        "source": "com.example.studentmanagement.app-main-44:/layout/activity_login.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\drawable_bg_card_green.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\drawable\\bg_card_green.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\drawable_bg_card_white.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\drawable\\bg_card_white.xml"
+    },
+    {
+        "merged": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-debug-42:\\drawable_bg_avatar_circle.xml.flat",
+        "source": "C:\\Users\\gopic\\.gradle\\daemon\\8.9\\com.example.studentmanagement.app-main-44:\\drawable\\bg_avatar_circle.xml"
+    }
+]
