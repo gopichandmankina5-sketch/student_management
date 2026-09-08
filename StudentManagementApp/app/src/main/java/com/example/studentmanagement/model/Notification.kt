@@ -1,6 +1,6 @@
 package com.example.studentmanagement.model
 
-import com.google.gson.annotations.SerializedName
+
 
 /** Category of notification for display/filtering. */
 enum class NotificationType {
@@ -34,17 +34,17 @@ enum class NotificationType {
  * deep-link into AssignmentDetailsActivity.
  */
 data class Notification(
-    @SerializedName("id")                  val id: Int,
-    @SerializedName("studentId")           val studentId: Int,
-    @SerializedName("title")               val title: String,
-    @SerializedName("message")             val message: String,
-    @SerializedName("type")                val type: String,           // NotificationType name
-    @SerializedName("createdAt")           val createdAt: String,
-    @SerializedName("isRead")              val isRead: Boolean = false,
-    @SerializedName("relatedAssignmentId") val relatedAssignmentId: Int? = null
+    val id: Int,
+    val studentId: Int,
+    val title: String,
+    val message: String,
+    val type: String,           // NotificationType name
+    val createdAt: String,
+    val isRead: Boolean = false,
+    val relatedAssignmentId: Int? = null
 )
 
 /** Request body for marking a single notification read. */
 data class MarkReadRequest(
-    @SerializedName("isRead") val isRead: Boolean = true
+    val isRead: Boolean = true
 )

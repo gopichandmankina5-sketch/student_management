@@ -11,7 +11,7 @@ import com.example.studentmanagement.auth.LoginActivity
 import com.example.studentmanagement.auth.SessionManager
 import com.example.studentmanagement.databinding.ActivityDashboardBinding
 import com.example.studentmanagement.notification.NotificationActivity
-import com.example.studentmanagement.api.RetrofitClient
+
 import com.example.studentmanagement.profile.ProfileActivity
 import com.example.studentmanagement.repository.StudentRepository
 import com.google.android.material.snackbar.Snackbar
@@ -44,11 +44,16 @@ import kotlinx.coroutines.launch
  *   → Uncomment the loadDashboardFromApi() call once the API is live
  * ─────────────────────────────────────────────────────────────────
  */
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
+
 class DashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDashboardBinding
     private lateinit var sessionManager: SessionManager
     private lateinit var repository: StudentRepository
+    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,7 +63,6 @@ class DashboardActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         repository = StudentRepository(this)
 
-        // Redirect to login if session expired
         if (!sessionManager.isLoggedIn()) {
             navigateToLogin()
             return
@@ -69,100 +73,78 @@ class DashboardActivity : AppCompatActivity() {
         setupLogoutButton()
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // Data loading
-    // ─────────────────────────────────────────────────────────────
-
     private fun loadStudentInfo() {
-        // Immediately display session-cached values (fast)
         val name = sessionManager.getStudentName()
         val email = sessionManager.getStudentEmail()
-        binding.tvWelcome.text = "Welcome, $name 👋"
+        binding.tvWelcome.text = "Welcome, $name \uD83D\uDC4B"
         binding.tvEmail.text = email
 
-        // Load full profile from Room for department + year display
         val studentId = sessionManager.getStudentId()
         if (studentId > 0L) {
             lifecycleScope.launch {
                 when (val result = repository.getStudentById(studentId)) {
                     is StudentRepository.RepositoryResult.Success -> {
                         val student = result.data
-                        binding.tvDepartmentInfo.text =
-                            "${student.department} • ${student.year}"
-                        // Update session name in case it was edited
+                        binding.tvDepartmentInfo.text = "${student.department} • ${student.year}"
                         sessionManager.updateName(student.name)
-                        binding.tvWelcome.text = "Welcome, ${student.name} 👋"
+                        binding.tvWelcome.text = "Welcome, ${student.name} \uD83D\uDC4B"
                     }
-                    is StudentRepository.RepositoryResult.Error -> {
-                        // Non-critical: session data already displayed
-                    }
+                    is StudentRepository.RepositoryResult.Error -> {}
                 }
             }
         }
 
-        // Initialize loading state
         binding.tvAttendanceValue.text = "-"
         binding.tvCoursesValue.text = "-"
         binding.tvAssignmentsValue.text = "-"
         binding.tvNotifValue.text = "-"
         
-        // Load real data from API
         loadDashboardFromApi(studentId)
     }
 
     private fun loadDashboardFromApi(studentId: Long) {
         lifecycleScope.launch {
             try {
-                val token = sessionManager.getBearerToken()
-                val response = RetrofitClient.api.getDashboard(studentId, token)
-                if (response.isSuccessful) {
-                    val data = response.body() ?: return@launch
-                    binding.tvAttendanceValue.text = "${data.attendancePercentage}%"
-                    binding.tvCoursesValue.text = data.enrolledCourses.toString()
-                    binding.tvAssignmentsValue.text = data.upcomingAssignments.toString()
-                    binding.tvNotifValue.text = data.unreadNotifications.toString()
-                } else {
-                    Snackbar.make(binding.root, "Unable to load dashboard data", Snackbar.LENGTH_SHORT).show()
-                }
+                // Member 1 implementation for dashboard using Firestore
+                val assignmentsCount = firestore.collection("assignments")
+                    .whereEqualTo("studentId", studentId.toInt())
+                    .get()
+                    .await()
+                    .size()
+                
+                val notificationsCount = firestore.collection("notifications")
+                    .whereEqualTo("studentId", studentId.toInt())
+                    .whereEqualTo("isRead", false)
+                    .get()
+                    .await()
+                    .size()
+
+                binding.tvAttendanceValue.text = "0%" // Member 2
+                binding.tvCoursesValue.text = "0"     // Member 2
+                binding.tvAssignmentsValue.text = assignmentsCount.toString()
+                binding.tvNotifValue.text = notificationsCount.toString()
             } catch (e: Exception) {
                 Snackbar.make(binding.root, "Unable to load data. Please try again later.", Snackbar.LENGTH_SHORT).show()
             }
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // Navigation
-    // ─────────────────────────────────────────────────────────────
-
     private fun setupNavigationCards() {
-        // Profile — implemented (Member 1)
         binding.navProfile.setOnClickListener {
             startActivity(Intent(this, ProfileActivity::class.java))
         }
-
-        // ── Placeholders for other team members ──
-
-        // Member 2: Attendance module
         binding.navAttendance.setOnClickListener {
             showComingSoonMessage("Attendance module — Member 2")
         }
-
-        // Member 2: Courses module
         binding.navCourses.setOnClickListener {
             showComingSoonMessage("Courses module — Member 2")
         }
-
-        // Member 3: Assignments module
         binding.navAssignments.setOnClickListener {
             startActivity(Intent(this, AssignmentActivity::class.java))
         }
-
-        // Member 3: Notifications module
         binding.navNotifications.setOnClickListener {
             startActivity(Intent(this, NotificationActivity::class.java))
         }
-
-        // Stat card shortcuts
         binding.cardAttendance.setOnClickListener {
             showComingSoonMessage("Attendance — Member 2")
         }
@@ -178,16 +160,8 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun showComingSoonMessage(module: String) {
-        Snackbar.make(
-            binding.root,
-            "🔜 $module — coming soon!",
-            Snackbar.LENGTH_SHORT
-        ).show()
+        Snackbar.make(binding.root, "\uD83D\uDD1C $module — coming soon!", Snackbar.LENGTH_SHORT).show()
     }
-
-    // ─────────────────────────────────────────────────────────────
-    // Logout
-    // ─────────────────────────────────────────────────────────────
 
     private fun setupLogoutButton() {
         binding.btnLogout.setOnClickListener {
@@ -205,6 +179,7 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun performLogout() {
+        FirebaseAuth.getInstance().signOut()
         sessionManager.logout()
         navigateToLogin()
     }
@@ -216,14 +191,9 @@ class DashboardActivity : AppCompatActivity() {
         finish()
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // Lifecycle — refresh data when returning from Profile
-    // ─────────────────────────────────────────────────────────────
-
     override fun onResume() {
         super.onResume()
-        // Refresh name in case the user edited their profile
         val name = sessionManager.getStudentName()
-        binding.tvWelcome.text = "Welcome, $name 👋"
+        binding.tvWelcome.text = "Welcome, $name \uD83D\uDC4B"
     }
 }

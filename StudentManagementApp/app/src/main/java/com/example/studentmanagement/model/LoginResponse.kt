@@ -1,6 +1,6 @@
 package com.example.studentmanagement.model
 
-import com.google.gson.annotations.SerializedName
+
 
 /**
  * Response from POST /api/auth/login and POST /api/auth/register
@@ -15,10 +15,10 @@ import com.google.gson.annotations.SerializedName
  * }
  */
 data class LoginResponse(
-    @SerializedName("success") val success: Boolean,
-    @SerializedName("message") val message: String,
-    @SerializedName("studentId") val studentId: Long? = null,
-    @SerializedName("userId") val userId: Long? = null,
-    @SerializedName("role") val role: String? = null,
-    @SerializedName("token") val token: String? = null
+    val success: Boolean,
+    val message: String,
+    val studentId: Long? = null,
+    val userId: Long? = null,
+    val role: String? = null,
+    val token: String? = null
 )

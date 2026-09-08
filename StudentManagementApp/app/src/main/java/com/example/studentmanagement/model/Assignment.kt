@@ -1,6 +1,6 @@
 package com.example.studentmanagement.model
 
-import com.google.gson.annotations.SerializedName
+
 
 /** Submission states for an assignment. */
 enum class SubmissionStatus {
@@ -26,21 +26,21 @@ enum class SubmissionStatus {
  * Use [com.example.studentmanagement.utils.DateUtils] for all date operations.
  */
 data class Assignment(
-    @SerializedName("id")               val id: Int,
-    @SerializedName("studentId")        val studentId: Int,
-    @SerializedName("courseId")         val courseId: Int,
-    @SerializedName("courseName")       val courseName: String,
-    @SerializedName("courseCode")       val courseCode: String,
-    @SerializedName("title")            val title: String,
-    @SerializedName("description")      val description: String,
-    @SerializedName("assignedDate")     val assignedDate: String,       // yyyy-MM-dd
-    @SerializedName("deadline")         val deadline: String,           // yyyy-MM-dd
-    @SerializedName("submissionStatus") val submissionStatus: String,   // SubmissionStatus name
-    @SerializedName("submittedDate")    val submittedDate: String? = null
+    val id: Int,
+    val studentId: Int,
+    val courseId: Int,
+    val courseName: String,
+    val courseCode: String,
+    val title: String,
+    val description: String,
+    val assignedDate: String,       // yyyy-MM-dd
+    val deadline: String,           // yyyy-MM-dd
+    val submissionStatus: String,   // SubmissionStatus name
+    val submittedDate: String? = null
 )
 
 /** Request body sent to PUT /api/assignments/{id}/submission */
 data class SubmissionRequest(
-    @SerializedName("submissionStatus") val submissionStatus: String,
-    @SerializedName("submittedDate")    val submittedDate: String
+    val submissionStatus: String,
+    val submittedDate: String
 )

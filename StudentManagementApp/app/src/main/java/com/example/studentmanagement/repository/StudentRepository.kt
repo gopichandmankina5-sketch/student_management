@@ -2,7 +2,7 @@ package com.example.studentmanagement.repository
 
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
-import com.example.studentmanagement.api.RetrofitClient
+
 import com.example.studentmanagement.database.AppDatabase
 import com.example.studentmanagement.database.StudentEntity
 import com.example.studentmanagement.model.LoginRequest
@@ -29,143 +29,123 @@ import java.security.MessageDigest
  *      repository functions and observe [RepositoryResult].
  * ─────────────────────────────────────────────────────────────────
  */
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
+
 class StudentRepository(context: Context) {
 
     private val dao = AppDatabase.getInstance(context).studentDao()
-    private val api = RetrofitClient.api
-
-    // ─────────────────────────────────────────────────────────────
-    // Result wrapper
-    // ─────────────────────────────────────────────────────────────
+    private val auth = FirebaseAuth.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()
+    private val sessionManager = com.example.studentmanagement.auth.SessionManager(context)
 
     sealed class RepositoryResult<out T> {
         data class Success<T>(val data: T) : RepositoryResult<T>()
         data class Error(val message: String) : RepositoryResult<Nothing>()
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // Authentication — API
-    // ─────────────────────────────────────────────────────────────
-
-    /**
-     * Registers a new student locally.
-     *
-     * To switch to the REST API, replace the body below with:
-     *   val response = api.register(RegisterRequest(...))
-     *   return if (response.isSuccessful && response.body()?.success == true) {
-     *       val loginData = response.body()!!
-     *       // optionally cache in Room for offline use
-     *       RepositoryResult.Success(loginData)
-     *   } else {
-     *       RepositoryResult.Error(response.body()?.message ?: "Registration failed")
-     *   }
-     */
     suspend fun register(
-        name: String,
-        rollNumber: String,
-        email: String,
-        password: String,
-        department: String,
-        year: String
+        name: String, rollNumber: String, email: String, password: String, department: String, year: String
     ): RepositoryResult<LoginResponse> {
         return try {
-            val response = api.register(
-                RegisterRequest(
-                    name = name.trim(),
-                    rollNumber = rollNumber.trim(),
-                    email = email.trim(),
-                    password = password,
-                    department = department.trim(),
-                    year = year.trim()
-                )
+            val authResult = auth.createUserWithEmailAndPassword(email.trim(), password).await()
+            val uid = authResult.user?.uid ?: throw Exception("Auth failed")
+
+            val studentData = hashMapOf(
+                "name" to name.trim(),
+                "rollNumber" to rollNumber.trim(),
+                "email" to email.trim(),
+                "department" to department.trim(),
+                "year" to year.trim(),
+                "role" to "STUDENT",
+                "uid" to uid
             )
-            val body = response.body()
-            if (response.isSuccessful && body != null && body.success) {
-                RepositoryResult.Success(body)
-            } else {
-                RepositoryResult.Error(body?.message ?: "Registration failed")
-            }
-        } catch (e: IOException) {
-            RepositoryResult.Error("Network unavailable. Please check your connection.")
+
+            firestore.collection("students").document(uid).set(studentData).await()
+
+            RepositoryResult.Success(LoginResponse(success = true, message = "Success", studentId = uid.hashCode().toLong(), token = uid))
         } catch (e: Exception) {
             RepositoryResult.Error("Registration failed: ${e.localizedMessage}")
         }
     }
 
-    /**
-     * Logs in a student using local Room data.
-     *
-     * To switch to the REST API, replace the body below with:
-     *   val response = api.login(LoginRequest(email, password))
-     *   return if (response.isSuccessful && response.body()?.success == true) {
-     *       RepositoryResult.Success(response.body()!!)
-     *   } else {
-     *       RepositoryResult.Error(response.body()?.message ?: "Login failed")
-     *   }
-     */
     suspend fun login(email: String, password: String): RepositoryResult<LoginResponse> {
         return try {
-            val response = api.login(LoginRequest(email.trim(), password))
-            val body = response.body()
-            if (response.isSuccessful && body != null && body.success) {
-                RepositoryResult.Success(body)
-            } else {
-                RepositoryResult.Error(body?.message ?: "Login failed")
-            }
-        } catch (e: IOException) {
-            RepositoryResult.Error("Network unavailable. Please check your connection.")
+            val authResult = auth.signInWithEmailAndPassword(email.trim(), password).await()
+            val uid = authResult.user?.uid ?: throw Exception("Auth failed")
+            
+            // Just verifying the document exists
+            val doc = firestore.collection("students").document(uid).get().await()
+            if (!doc.exists()) throw Exception("Student profile not found")
+
+            RepositoryResult.Success(LoginResponse(success = true, message = "Success", studentId = uid.hashCode().toLong(), token = uid))
         } catch (e: Exception) {
             RepositoryResult.Error("Login failed: ${e.localizedMessage}")
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // Student Profile
-    // ─────────────────────────────────────────────────────────────
-
-    /** Fetches a student by ID from the local Room database. */
     suspend fun getStudentById(id: Long): RepositoryResult<Student> {
         return try {
-            val entity = dao.getById(id)
-                ?: return RepositoryResult.Error("Student not found")
-            RepositoryResult.Success(entity.toStudent())
+            val uid = auth.currentUser?.uid ?: throw Exception("Not authenticated")
+            val doc = firestore.collection("students").document(uid).get().await()
+            
+            if (doc.exists()) {
+                val student = Student(
+                    id = id,
+                    name = doc.getString("name") ?: "",
+                    rollNumber = doc.getString("rollNumber") ?: "",
+                    email = doc.getString("email") ?: "",
+                    department = doc.getString("department") ?: "",
+                    year = doc.getString("year") ?: "",
+                    passwordHash = ""
+                )
+                
+                dao.update(dao.getById(id)?.copy(
+                    name = student.name, department = student.department, year = student.year
+                ) ?: StudentEntity(
+                    id = id, name = student.name,
+                    rollNumber = student.rollNumber, email = student.email,
+                    department = student.department, year = student.year, passwordHash = ""
+                ))
+                RepositoryResult.Success(student)
+            } else {
+                RepositoryResult.Error("Student not found on server")
+            }
         } catch (e: Exception) {
-            RepositoryResult.Error("Failed to load profile: ${e.localizedMessage}")
+            val entity = dao.getById(id)
+            if (entity != null) RepositoryResult.Success(entity.toStudent())
+            else RepositoryResult.Error("Failed to load profile: ${e.localizedMessage}")
         }
     }
 
-    /** Saves updated profile fields to Room. */
     suspend fun updateStudent(student: Student): RepositoryResult<Unit> {
         return try {
-            val existing = dao.getById(student.id)
-                ?: return RepositoryResult.Error("Student not found")
+            val uid = auth.currentUser?.uid ?: throw Exception("Not authenticated")
+            
+            val updates = hashMapOf<String, Any>(
+                "name" to student.name.trim(),
+                "department" to student.department.trim(),
+                "year" to student.year.trim()
+            )
+            
+            firestore.collection("students").document(uid).update(updates).await()
 
-            dao.update(
-                existing.copy(
+            val existing = dao.getById(student.id)
+            if (existing != null) {
+                dao.update(existing.copy(
                     name = student.name.trim(),
-                    rollNumber = student.rollNumber.trim(),
-                    email = student.email.trim().lowercase(),
                     department = student.department.trim(),
                     year = student.year.trim()
-                )
-            )
+                ))
+            }
             RepositoryResult.Success(Unit)
         } catch (e: Exception) {
             RepositoryResult.Error("Failed to save profile: ${e.localizedMessage}")
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // Mapping helpers
-    // ─────────────────────────────────────────────────────────────
-
     private fun StudentEntity.toStudent() = Student(
-        id = id,
-        name = name,
-        rollNumber = rollNumber,
-        email = email,
-        department = department,
-        year = year,
-        passwordHash = passwordHash
+        id = id, name = name, rollNumber = rollNumber, email = email, department = department, year = year, passwordHash = passwordHash
     )
 }

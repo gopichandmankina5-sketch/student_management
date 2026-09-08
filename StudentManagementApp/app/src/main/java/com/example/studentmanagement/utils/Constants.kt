@@ -2,31 +2,10 @@ package com.example.studentmanagement.utils
 
 /**
  * App-wide constants.
- *
- * TEAM INTEGRATION NOTE:
- * - BASE_URL is set to the Android emulator localhost alias (10.0.2.2:3000).
- * - When Member 4 deploys the backend, update BASE_URL to the real server URL here only.
- * - Do NOT hardcode URLs elsewhere in the codebase.
  */
 object Constants {
 
-    // ─────────────────────────────────────────────────────────────
-    // API Configuration
-    // ─────────────────────────────────────────────────────────────
-
-    /**
-     * Development backend URL (Android emulator → localhost:3000).
-     * Member 4: Replace this URL with the deployed server address when ready.
-     *
-     * For a physical device on the same WiFi, use your machine's LAN IP:
-     *   e.g. "http://192.168.1.100:3000/"
-     */
-    const val BASE_URL = "http://10.0.2.2:3000/"
-
-    // API timeout (seconds)
-    const val CONNECT_TIMEOUT = 15L
-    const val READ_TIMEOUT = 30L
-    const val WRITE_TIMEOUT = 30L
+    // API Configuration removed - Firebase handles networking internally
 
     // ─────────────────────────────────────────────────────────────
     // SharedPreferences Keys
