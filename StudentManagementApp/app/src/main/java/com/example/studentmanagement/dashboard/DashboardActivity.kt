@@ -6,9 +6,12 @@ import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.studentmanagement.assignment.AssignmentActivity
 import com.example.studentmanagement.auth.LoginActivity
 import com.example.studentmanagement.auth.SessionManager
 import com.example.studentmanagement.databinding.ActivityDashboardBinding
+import com.example.studentmanagement.notification.NotificationActivity
+import com.example.studentmanagement.api.RetrofitClient
 import com.example.studentmanagement.profile.ProfileActivity
 import com.example.studentmanagement.repository.StudentRepository
 import com.google.android.material.snackbar.Snackbar
@@ -97,35 +100,35 @@ class DashboardActivity : AppCompatActivity() {
             }
         }
 
-        // ── Mock dashboard stats (replace with API call when Member 4 is ready) ──
-        // To load real data: call loadDashboardFromApi(studentId)
-        binding.tvAttendanceValue.text = "82%"
-        binding.tvCoursesValue.text = "6"
-        binding.tvAssignmentsValue.text = "3"
-        binding.tvNotifValue.text = "2"
+        // Initialize loading state
+        binding.tvAttendanceValue.text = "-"
+        binding.tvCoursesValue.text = "-"
+        binding.tvAssignmentsValue.text = "-"
+        binding.tvNotifValue.text = "-"
+        
+        // Load real data from API
+        loadDashboardFromApi(studentId)
     }
 
-    /*
-     * ── STUB: Uncomment when Member 4's backend is available ──
-     *
-     * private fun loadDashboardFromApi(studentId: Long) {
-     *     lifecycleScope.launch {
-     *         try {
-     *             val token = sessionManager.getBearerToken()
-     *             val response = RetrofitClient.api.getDashboard(studentId, token)
-     *             if (response.isSuccessful) {
-     *                 val data = response.body() ?: return@launch
-     *                 binding.tvAttendanceValue.text = "${data.attendancePercentage}%"
-     *                 binding.tvCoursesValue.text = data.enrolledCourses.toString()
-     *                 binding.tvAssignmentsValue.text = data.upcomingAssignments.toString()
-     *                 binding.tvNotifValue.text = data.unreadNotifications.toString()
-     *             }
-     *         } catch (e: Exception) {
-     *             // API unavailable — mock data already shown, no crash
-     *         }
-     *     }
-     * }
-     */
+    private fun loadDashboardFromApi(studentId: Long) {
+        lifecycleScope.launch {
+            try {
+                val token = sessionManager.getBearerToken()
+                val response = RetrofitClient.api.getDashboard(studentId, token)
+                if (response.isSuccessful) {
+                    val data = response.body() ?: return@launch
+                    binding.tvAttendanceValue.text = "${data.attendancePercentage}%"
+                    binding.tvCoursesValue.text = data.enrolledCourses.toString()
+                    binding.tvAssignmentsValue.text = data.upcomingAssignments.toString()
+                    binding.tvNotifValue.text = data.unreadNotifications.toString()
+                } else {
+                    Snackbar.make(binding.root, "Unable to load dashboard data", Snackbar.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Snackbar.make(binding.root, "Unable to load data. Please try again later.", Snackbar.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     // ─────────────────────────────────────────────────────────────
     // Navigation
@@ -151,12 +154,12 @@ class DashboardActivity : AppCompatActivity() {
 
         // Member 3: Assignments module
         binding.navAssignments.setOnClickListener {
-            showComingSoonMessage("Assignments module — Member 3")
+            startActivity(Intent(this, AssignmentActivity::class.java))
         }
 
         // Member 3: Notifications module
         binding.navNotifications.setOnClickListener {
-            showComingSoonMessage("Notifications module — Member 3")
+            startActivity(Intent(this, NotificationActivity::class.java))
         }
 
         // Stat card shortcuts
@@ -167,10 +170,10 @@ class DashboardActivity : AppCompatActivity() {
             showComingSoonMessage("Courses — Member 2")
         }
         binding.cardAssignments.setOnClickListener {
-            showComingSoonMessage("Assignments — Member 3")
+            startActivity(Intent(this, AssignmentActivity::class.java))
         }
         binding.cardNotificationsStat.setOnClickListener {
-            showComingSoonMessage("Notifications — Member 3")
+            startActivity(Intent(this, NotificationActivity::class.java))
         }
     }
 

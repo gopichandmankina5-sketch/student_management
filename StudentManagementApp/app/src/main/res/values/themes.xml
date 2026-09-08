@@ -75,4 +75,11 @@
         <item name="cardElevation">4dp</item>
         <item name="strokeWidth">0dp</item>
     </style>
+
+    <!-- Filter Chip -->
+    <style name="Widget.Material3.Chip.Filter" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/colorSurfaceVariant</item>
+        <item name="checkedIconVisible">true</item>
+        <item name="chipCornerRadius">8dp</item>
+    </style>
 </resources>

@@ -11,8 +11,13 @@
 
         <activity android:name=".profile.ProfileActivity" />
         <activity android:name=".dashboard.DashboardActivity" />
+        <activity android:name=".dashboard.FacultyDashboardActivity" />
+        <activity android:name=".dashboard.AdminDashboardActivity" />
         <activity android:name=".auth.RegisterActivity" />
         <activity android:name=".auth.LoginActivity" />
+        <activity android:name=".assignment.AssignmentActivity" />
+        <activity android:name=".assignment.AssignmentDetailsActivity" />
+        <activity android:name=".notification.NotificationActivity" />
         <activity
             android:name=".auth.SplashActivity"
             android:exported="true">

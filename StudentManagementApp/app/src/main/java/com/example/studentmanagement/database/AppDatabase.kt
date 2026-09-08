@@ -9,23 +9,34 @@ import com.example.studentmanagement.utils.Constants
 /**
  * Room database singleton.
  *
- * To access the DAO, use:
+ * To access DAOs, use:
  *   AppDatabase.getInstance(context).studentDao()
+ *   AppDatabase.getInstance(context).assignmentDao()
+ *   AppDatabase.getInstance(context).notificationDao()
  *
  * Database version must be incremented and a migration provided whenever
  * the schema (entities) changes.
+ *
+ * Version history:
+ *   v1 — Member 1: students table
+ *   v2 — Member 3: assignments + notifications tables
  */
 @Database(
-    entities = [StudentEntity::class],
+    entities = [
+        StudentEntity::class,
+        AssignmentEntity::class,
+        NotificationEntity::class
+    ],
     version = Constants.DB_VERSION,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun studentDao(): StudentDao
+    abstract fun assignmentDao(): AssignmentDao
+    abstract fun notificationDao(): NotificationDao
 
     companion object {
-        // Volatile ensures all threads see the same instance immediately.
         @Volatile
         private var INSTANCE: AppDatabase? = null
 

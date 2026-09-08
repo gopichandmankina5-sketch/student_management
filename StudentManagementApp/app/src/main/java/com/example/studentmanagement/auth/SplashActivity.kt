@@ -4,7 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.studentmanagement.dashboard.AdminDashboardActivity
 import com.example.studentmanagement.dashboard.DashboardActivity
+import com.example.studentmanagement.dashboard.FacultyDashboardActivity
 import com.example.studentmanagement.databinding.ActivitySplashBinding
 import com.example.studentmanagement.utils.Constants
 import kotlinx.coroutines.delay
@@ -39,7 +41,11 @@ class SplashActivity : AppCompatActivity() {
 
     private fun navigateToNextScreen() {
         val destination = if (sessionManager.isLoggedIn()) {
-            DashboardActivity::class.java
+            when (sessionManager.getRole()) {
+                "FACULTY" -> FacultyDashboardActivity::class.java
+                "ADMIN" -> AdminDashboardActivity::class.java
+                else -> DashboardActivity::class.java
+            }
         } else {
             LoginActivity::class.java
         }

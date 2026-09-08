@@ -41,14 +41,21 @@ object Constants {
     // ─────────────────────────────────────────────────────────────
     // Intent / Bundle Extras
     // ─────────────────────────────────────────────────────────────
-    const val EXTRA_STUDENT_ID = "extra_student_id"
-    const val EXTRA_FROM_REGISTER = "extra_from_register"
+    const val EXTRA_STUDENT_ID       = "extra_student_id"
+    const val EXTRA_FROM_REGISTER    = "extra_from_register"
+
+    // Member 3 — Assignment & Notification extras
+    const val EXTRA_ASSIGNMENT_ID    = "extra_assignment_id"
+    const val EXTRA_NOTIFICATION_ID  = "extra_notification_id"
 
     // ─────────────────────────────────────────────────────────────
     // Database
     // ─────────────────────────────────────────────────────────────
     const val DB_NAME = "student_management.db"
-    const val DB_VERSION = 1
+    // Increment this whenever the Room schema changes and add a Migration.
+    // v1 → Member 1 (students table)
+    // v2 → Member 3 (assignments + notifications tables)
+    const val DB_VERSION = 2
 
     // ─────────────────────────────────────────────────────────────
     // Validation Rules

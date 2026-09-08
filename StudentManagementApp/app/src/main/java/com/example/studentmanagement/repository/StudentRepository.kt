@@ -44,17 +44,7 @@ class StudentRepository(context: Context) {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // Password hashing (SHA-256)
-    // ─────────────────────────────────────────────────────────────
-
-    private fun hashPassword(password: String): String {
-        val bytes = MessageDigest.getInstance("SHA-256").digest(password.toByteArray())
-        return bytes.joinToString("") { "%02x".format(it) }
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // Authentication — LOCAL (mock) implementation
-    // Replace with Retrofit calls once Member 4's API is live.
+    // Authentication — API
     // ─────────────────────────────────────────────────────────────
 
     /**
@@ -79,31 +69,24 @@ class StudentRepository(context: Context) {
         year: String
     ): RepositoryResult<LoginResponse> {
         return try {
-            // Check for duplicate email
-            if (dao.countByEmail(email.trim()) > 0) {
-                return RepositoryResult.Error("An account with this email already exists")
-            }
-
-            val entity = StudentEntity(
-                name = name.trim(),
-                rollNumber = rollNumber.trim(),
-                email = email.trim().lowercase(),
-                department = department.trim(),
-                year = year.trim(),
-                passwordHash = hashPassword(password)
-            )
-            val newId = dao.insert(entity)
-
-            RepositoryResult.Success(
-                LoginResponse(
-                    success = true,
-                    message = "Registration successful",
-                    studentId = newId,
-                    token = null   // Token will come from the real API
+            val response = api.register(
+                RegisterRequest(
+                    name = name.trim(),
+                    rollNumber = rollNumber.trim(),
+                    email = email.trim(),
+                    password = password,
+                    department = department.trim(),
+                    year = year.trim()
                 )
             )
-        } catch (e: SQLiteConstraintException) {
-            RepositoryResult.Error("An account with this email already exists")
+            val body = response.body()
+            if (response.isSuccessful && body != null && body.success) {
+                RepositoryResult.Success(body)
+            } else {
+                RepositoryResult.Error(body?.message ?: "Registration failed")
+            }
+        } catch (e: IOException) {
+            RepositoryResult.Error("Network unavailable. Please check your connection.")
         } catch (e: Exception) {
             RepositoryResult.Error("Registration failed: ${e.localizedMessage}")
         }
@@ -122,22 +105,13 @@ class StudentRepository(context: Context) {
      */
     suspend fun login(email: String, password: String): RepositoryResult<LoginResponse> {
         return try {
-            val entity = dao.getByEmail(email.trim().lowercase())
-                ?: return RepositoryResult.Error("Invalid email or password")
-
-            val passwordHash = hashPassword(password)
-            if (entity.passwordHash != passwordHash) {
-                return RepositoryResult.Error("Invalid email or password")
+            val response = api.login(LoginRequest(email.trim(), password))
+            val body = response.body()
+            if (response.isSuccessful && body != null && body.success) {
+                RepositoryResult.Success(body)
+            } else {
+                RepositoryResult.Error(body?.message ?: "Login failed")
             }
-
-            RepositoryResult.Success(
-                LoginResponse(
-                    success = true,
-                    message = "Login successful",
-                    studentId = entity.id,
-                    token = null   // Token will come from the real API
-                )
-            )
         } catch (e: IOException) {
             RepositoryResult.Error("Network unavailable. Please check your connection.")
         } catch (e: Exception) {

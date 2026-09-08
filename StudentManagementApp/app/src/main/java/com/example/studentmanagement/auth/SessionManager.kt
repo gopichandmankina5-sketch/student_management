@@ -24,6 +24,10 @@ class SessionManager(context: Context) {
         Context.MODE_PRIVATE
     )
 
+    companion object {
+        private const val KEY_ROLE = "KEY_ROLE"
+    }
+
     // ─────────────────────────────────────────────────────────────
     // Save session
     // ─────────────────────────────────────────────────────────────
@@ -40,13 +44,15 @@ class SessionManager(context: Context) {
         studentId: Long,
         name: String,
         email: String,
-        token: String? = null
+        token: String? = null,
+        role: String = "STUDENT"
     ) {
         prefs.edit()
             .putBoolean(Constants.KEY_LOGGED_IN, true)
             .putLong(Constants.KEY_STUDENT_ID, studentId)
             .putString(Constants.KEY_STUDENT_NAME, name)
             .putString(Constants.KEY_STUDENT_EMAIL, email)
+            .putString(KEY_ROLE, role)
             .apply {
                 if (token != null) putString(Constants.KEY_AUTH_TOKEN, token)
             }
@@ -70,6 +76,10 @@ class SessionManager(context: Context) {
     /** Returns the student's email, or empty string if not set. */
     fun getStudentEmail(): String =
         prefs.getString(Constants.KEY_STUDENT_EMAIL, "") ?: ""
+
+    /** Returns the user's role (STUDENT, FACULTY, ADMIN), defaults to STUDENT. */
+    fun getRole(): String =
+        prefs.getString(KEY_ROLE, "STUDENT") ?: "STUDENT"
 
     /**
      * Returns the auth token for API calls.

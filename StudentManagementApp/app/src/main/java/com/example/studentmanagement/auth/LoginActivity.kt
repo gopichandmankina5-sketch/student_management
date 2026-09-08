@@ -5,7 +5,9 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.studentmanagement.dashboard.AdminDashboardActivity
 import com.example.studentmanagement.dashboard.DashboardActivity
+import com.example.studentmanagement.dashboard.FacultyDashboardActivity
 import com.example.studentmanagement.databinding.ActivityLoginBinding
 import com.example.studentmanagement.repository.StudentRepository
 import com.example.studentmanagement.utils.ValidationUtils
@@ -72,22 +74,25 @@ class LoginActivity : AppCompatActivity() {
             when (val result = repository.login(email, password)) {
                 is StudentRepository.RepositoryResult.Success -> {
                     val data = result.data
+                    val resolvedId = data.studentId ?: data.userId ?: 0L
+                    val role = data.role?.uppercase() ?: "STUDENT"
                     sessionManager.saveSession(
-                        studentId = data.studentId ?: 0L,
+                        studentId = resolvedId,
                         name = sessionManager.getStudentName(), // updated after profile load
                         email = email,
-                        token = data.token
+                        token = data.token,
+                        role = role
                     )
                     // Load the student name from DB to store in session
-                    val studentId = data.studentId ?: 0L
-                    if (studentId > 0L) {
-                        val profileResult = repository.getStudentById(studentId)
+                    if (resolvedId > 0L) {
+                        val profileResult = repository.getStudentById(resolvedId)
                         if (profileResult is StudentRepository.RepositoryResult.Success) {
                             sessionManager.saveSession(
-                                studentId = studentId,
+                                studentId = resolvedId,
                                 name = profileResult.data.name,
                                 email = email,
-                                token = data.token
+                                token = data.token,
+                                role = role
                             )
                         }
                     }
@@ -102,7 +107,12 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun navigateToDashboard() {
-        startActivity(Intent(this, DashboardActivity::class.java).apply {
+        val destination = when (sessionManager.getRole()) {
+            "FACULTY" -> FacultyDashboardActivity::class.java
+            "ADMIN" -> AdminDashboardActivity::class.java
+            else -> DashboardActivity::class.java
+        }
+        startActivity(Intent(this, destination).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
         finish()

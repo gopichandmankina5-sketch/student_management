@@ -18,5 +18,7 @@ data class LoginResponse(
     @SerializedName("success") val success: Boolean,
     @SerializedName("message") val message: String,
     @SerializedName("studentId") val studentId: Long? = null,
+    @SerializedName("userId") val userId: Long? = null,
+    @SerializedName("role") val role: String? = null,
     @SerializedName("token") val token: String? = null
 )
