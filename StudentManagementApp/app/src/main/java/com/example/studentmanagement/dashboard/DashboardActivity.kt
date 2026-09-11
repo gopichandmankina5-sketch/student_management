@@ -31,17 +31,13 @@ import kotlinx.coroutines.launch
  * ─────────────────────────────────────────────────────────────────
  * Member 2 (Attendance + Courses):
  *   → Connect navAttendance and navCourses click listeners
- *   → Replace mock stat values in tvAttendanceValue and tvCoursesValue
+ *   → Replace stat values in tvAttendanceValue and tvCoursesValue
  *     with real data from their module/API
  *
  * Member 3 (Assignments + Notifications):
  *   → Connect navAssignments and navNotifications click listeners
- *   → Replace mock stat values in tvAssignmentsValue and tvNotifValue
+ *   → Replace stat values in tvAssignmentsValue and tvNotifValue
  *     with real data from their module/API
- *
- * Member 4 (Backend):
- *   → The getDashboard() API call stub is ready in StudentRepository
- *   → Uncomment the loadDashboardFromApi() call once the API is live
  * ─────────────────────────────────────────────────────────────────
  */
 import com.google.firebase.auth.FirebaseAuth
@@ -54,6 +50,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var repository: StudentRepository
     private val firestore = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,33 +95,38 @@ class DashboardActivity : AppCompatActivity() {
         binding.tvCoursesValue.text = "-"
         binding.tvAssignmentsValue.text = "-"
         binding.tvNotifValue.text = "-"
-        
-        loadDashboardFromApi(studentId)
+
+        loadDashboardFromFirestore()
     }
 
-    private fun loadDashboardFromApi(studentId: Long) {
+    private fun loadDashboardFromFirestore() {
         lifecycleScope.launch {
             try {
-                // Member 1 implementation for dashboard using Firestore
+                // Use Firebase UID string for Firestore queries (not integer hashcode)
+                val uid = auth.currentUser?.uid
+                    ?: sessionManager.getUid().takeIf { it.isNotEmpty() }
+                    ?: return@launch
+
                 val assignmentsCount = firestore.collection("assignments")
-                    .whereEqualTo("studentId", studentId.toInt())
+                    .whereEqualTo("studentUid", uid)
                     .get()
                     .await()
                     .size()
-                
+
                 val notificationsCount = firestore.collection("notifications")
-                    .whereEqualTo("studentId", studentId.toInt())
+                    .whereEqualTo("studentUid", uid)
                     .whereEqualTo("isRead", false)
                     .get()
                     .await()
                     .size()
 
-                binding.tvAttendanceValue.text = "0%" // Member 2
-                binding.tvCoursesValue.text = "0"     // Member 2
+                // Attendance and Courses stats are owned by Member 2
+                binding.tvAttendanceValue.text = "0%"  // Member 2 module
+                binding.tvCoursesValue.text = "0"       // Member 2 module
                 binding.tvAssignmentsValue.text = assignmentsCount.toString()
                 binding.tvNotifValue.text = notificationsCount.toString()
             } catch (e: Exception) {
-                Snackbar.make(binding.root, "Unable to load data. Please try again later.", Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, "Unable to load stats. Please try again later.", Snackbar.LENGTH_SHORT).show()
             }
         }
     }
@@ -134,10 +136,10 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, ProfileActivity::class.java))
         }
         binding.navAttendance.setOnClickListener {
-            showComingSoonMessage("Attendance module — Member 2")
+            startActivity(Intent(this, StudentAttendanceActivity::class.java))
         }
         binding.navCourses.setOnClickListener {
-            showComingSoonMessage("Courses module — Member 2")
+            startActivity(Intent(this, StudentCoursesActivity::class.java))
         }
         binding.navAssignments.setOnClickListener {
             startActivity(Intent(this, AssignmentActivity::class.java))
@@ -146,10 +148,10 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, NotificationActivity::class.java))
         }
         binding.cardAttendance.setOnClickListener {
-            showComingSoonMessage("Attendance — Member 2")
+            startActivity(Intent(this, StudentAttendanceActivity::class.java))
         }
         binding.cardCourses.setOnClickListener {
-            showComingSoonMessage("Courses — Member 2")
+            startActivity(Intent(this, StudentCoursesActivity::class.java))
         }
         binding.cardAssignments.setOnClickListener {
             startActivity(Intent(this, AssignmentActivity::class.java))
@@ -179,7 +181,7 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun performLogout() {
-        FirebaseAuth.getInstance().signOut()
+        auth.signOut()
         sessionManager.logout()
         navigateToLogin()
     }

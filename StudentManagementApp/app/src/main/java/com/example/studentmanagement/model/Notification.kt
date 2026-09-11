@@ -34,14 +34,14 @@ enum class NotificationType {
  * deep-link into AssignmentDetailsActivity.
  */
 data class Notification(
-    val id: Int,
-    val studentId: Int,
+    val id: String,
+    val studentUid: String,
     val title: String,
     val message: String,
     val type: String,           // NotificationType name
     val createdAt: String,
     val isRead: Boolean = false,
-    val relatedAssignmentId: Int? = null
+    val relatedAssignmentId: String? = null
 )
 
 /** Request body for marking a single notification read. */

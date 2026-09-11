@@ -16,6 +16,8 @@ import com.example.studentmanagement.repository.AssignmentRepository
 import com.example.studentmanagement.utils.Constants
 import com.example.studentmanagement.utils.DateUtils
 import com.google.android.material.chip.Chip
+import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -25,6 +27,7 @@ class AssignmentActivity : AppCompatActivity() {
     private lateinit var repository: AssignmentRepository
     private lateinit var adapter: AssignmentAdapter
     private lateinit var sessionManager: SessionManager
+    private val auth = FirebaseAuth.getInstance()
 
     private var allAssignments: List<AssignmentEntity> = emptyList()
     private var currentFilterId = com.example.studentmanagement.R.id.chipAll
@@ -41,9 +44,21 @@ class AssignmentActivity : AppCompatActivity() {
         setupRecyclerView()
         setupSearchAndFilter()
 
-        val studentId = sessionManager.getStudentId().toInt()
-        loadAssignments(studentId)
-        observeAssignments(studentId)
+        // Use FirebaseAuth UID as primary source — never use hashCode or Int conversion
+        val studentUid = auth.currentUser?.uid
+            ?: sessionManager.getUid().takeIf { it.isNotEmpty() }
+            ?: ""
+
+        if (studentUid.isEmpty()) {
+            // Show error but keep the screen open — do NOT call finish()
+            binding.progressBar.visibility = View.GONE
+            binding.layoutError.visibility = View.VISIBLE
+            binding.tvErrorMessage.text = "Unable to identify your account. Please log out and log in again."
+            return
+        }
+
+        loadAssignments(studentUid)
+        observeAssignments(studentUid)
     }
 
     private fun setupToolbar() {
@@ -81,19 +96,23 @@ class AssignmentActivity : AppCompatActivity() {
         }
         
         binding.btnRetry.setOnClickListener {
-            val studentId = sessionManager.getStudentId().toInt()
-            loadAssignments(studentId)
+            val studentUid = auth.currentUser?.uid
+                ?: sessionManager.getUid().takeIf { it.isNotEmpty() }
+                ?: ""
+            if (studentUid.isNotEmpty()) {
+                loadAssignments(studentUid)
+            }
         }
     }
 
-    private fun loadAssignments(studentId: Int) {
+    private fun loadAssignments(studentUid: String) {
         binding.progressBar.visibility = View.VISIBLE
         binding.layoutError.visibility = View.GONE
         binding.layoutEmpty.visibility = View.GONE
         binding.rvAssignments.visibility = View.GONE
 
         lifecycleScope.launch {
-            when (val result = repository.loadAssignments(studentId)) {
+            when (val result = repository.loadAssignments(studentUid)) {
                 is AssignmentRepository.Result.Success -> {
                     // Handled by observer
                 }
@@ -106,9 +125,9 @@ class AssignmentActivity : AppCompatActivity() {
         }
     }
 
-    private fun observeAssignments(studentId: Int) {
+    private fun observeAssignments(studentUid: String) {
         lifecycleScope.launch {
-            repository.observeAssignments(studentId).collectLatest { assignments ->
+            repository.observeAssignments(studentUid).collectLatest { assignments ->
                 binding.progressBar.visibility = View.GONE
                 allAssignments = assignments
                 applyFiltersAndSearch()

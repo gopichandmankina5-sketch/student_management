@@ -26,9 +26,10 @@ enum class SubmissionStatus {
  * Use [com.example.studentmanagement.utils.DateUtils] for all date operations.
  */
 data class Assignment(
-    val id: Int,
-    val studentId: Int,
-    val courseId: Int,
+    val id: String,
+    val studentUid: String,
+    val facultyUid: String,
+    val courseId: String,
     val courseName: String,
     val courseCode: String,
     val title: String,

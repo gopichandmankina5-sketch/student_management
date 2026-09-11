@@ -15,12 +15,13 @@ import androidx.room.PrimaryKey
  */
 @Entity(
     tableName = "assignments",
-    indices = [Index(value = ["studentId"]), Index(value = ["deadline"])]
+    indices = [Index(value = ["studentUid"]), Index(value = ["deadline"])]
 )
 data class AssignmentEntity(
-    @PrimaryKey val id: Int,
-    val studentId: Int,
-    val courseId: Int,
+    @PrimaryKey val id: String,
+    val studentUid: String,
+    val facultyUid: String,
+    val courseId: String,
     val courseName: String,
     val courseCode: String,
     val title: String,

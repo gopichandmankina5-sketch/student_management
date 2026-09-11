@@ -9,6 +9,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.studentmanagement.R
 import com.example.studentmanagement.auth.LoginActivity
 import com.example.studentmanagement.auth.SessionManager
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.card.MaterialCardView
+import com.google.firebase.auth.FirebaseAuth
 
 class AdminDashboardActivity : AppCompatActivity() {
 
@@ -31,6 +34,40 @@ class AdminDashboardActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnLogout).setOnClickListener {
             showLogoutConfirmation()
         }
+
+        setupNavigationCards()
+    }
+
+    private fun setupNavigationCards() {
+        // Manage Students — fully implemented with Firestore
+        findViewById<MaterialCardView>(R.id.navManageStudents).setOnClickListener {
+            startActivity(Intent(this, ManageStudentsActivity::class.java))
+        }
+
+        // Manage Faculty — implemented with Firestore
+        findViewById<MaterialCardView>(R.id.navManageFaculty).setOnClickListener {
+            startActivity(Intent(this, ManageFacultyActivity::class.java))
+        }
+
+        // Manage Courses — implemented with Firestore
+        findViewById<MaterialCardView>(R.id.navManageCourses).setOnClickListener {
+            startActivity(Intent(this, ManageCoursesActivity::class.java))
+        }
+        
+        findViewById<MaterialCardView>(R.id.navManageAssignments).setOnClickListener {
+            showComingSoonMessage("Manage Assignments")
+        }
+        findViewById<MaterialCardView>(R.id.navManageNotifications).setOnClickListener {
+            showComingSoonMessage("Manage Notifications")
+        }
+    }
+
+    private fun showComingSoonMessage(module: String) {
+        Snackbar.make(
+            findViewById(android.R.id.content),
+            "🚧 $module — coming soon!",
+            Snackbar.LENGTH_SHORT
+        ).show()
     }
 
     private fun showLogoutConfirmation() {
@@ -38,6 +75,7 @@ class AdminDashboardActivity : AppCompatActivity() {
             .setTitle("Logout")
             .setMessage("Are you sure you want to logout?")
             .setPositiveButton("Logout") { _, _ ->
+                FirebaseAuth.getInstance().signOut()
                 sessionManager.logout()
                 navigateToLogin()
             }

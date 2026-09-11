@@ -13,6 +13,7 @@ import com.example.studentmanagement.databinding.ActivityNotificationBinding
 import com.example.studentmanagement.repository.NotificationRepository
 import com.example.studentmanagement.utils.Constants
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -22,6 +23,7 @@ class NotificationActivity : AppCompatActivity() {
     private lateinit var repository: NotificationRepository
     private lateinit var adapter: NotificationAdapter
     private lateinit var sessionManager: SessionManager
+    private val auth = FirebaseAuth.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,16 +36,28 @@ class NotificationActivity : AppCompatActivity() {
         setupToolbar()
         setupRecyclerView()
 
-        val studentId = sessionManager.getStudentId().toInt()
-        loadNotifications(studentId)
-        observeNotifications(studentId)
+        // Use FirebaseAuth UID as primary source — never use hashCode or Int conversion
+        val studentUid = auth.currentUser?.uid
+            ?: sessionManager.getUid().takeIf { it.isNotEmpty() }
+            ?: ""
+
+        if (studentUid.isEmpty()) {
+            // Keep the screen open — show error instead of crashing or finishing
+            binding.progressBar.visibility = View.GONE
+            binding.layoutError.visibility = View.VISIBLE
+            binding.tvErrorMessage.text = "Unable to identify your account. Please log out and log in again."
+            return
+        }
+
+        loadNotifications(studentUid)
+        observeNotifications(studentUid)
 
         binding.btnRetry.setOnClickListener {
-            loadNotifications(studentId)
+            loadNotifications(studentUid)
         }
 
         binding.btnMarkAllRead.setOnClickListener {
-            markAllAsRead(studentId)
+            markAllAsRead(studentUid)
         }
     }
 
@@ -60,14 +74,14 @@ class NotificationActivity : AppCompatActivity() {
         binding.rvNotifications.adapter = adapter
     }
 
-    private fun loadNotifications(studentId: Int) {
+    private fun loadNotifications(studentUid: String) {
         binding.progressBar.visibility = View.VISIBLE
         binding.layoutError.visibility = View.GONE
         binding.layoutEmpty.visibility = View.GONE
         binding.rvNotifications.visibility = View.GONE
 
         lifecycleScope.launch {
-            when (val result = repository.loadNotifications(studentId)) {
+            when (val result = repository.loadNotifications(studentUid)) {
                 is NotificationRepository.Result.Success -> {
                     // Handled by observer
                 }
@@ -80,9 +94,9 @@ class NotificationActivity : AppCompatActivity() {
         }
     }
 
-    private fun observeNotifications(studentId: Int) {
+    private fun observeNotifications(studentUid: String) {
         lifecycleScope.launch {
-            repository.observeNotifications(studentId).collectLatest { notifications ->
+            repository.observeNotifications(studentUid).collectLatest { notifications ->
                 binding.progressBar.visibility = View.GONE
                 if (notifications.isEmpty()) {
                     binding.rvNotifications.visibility = View.GONE
@@ -116,9 +130,9 @@ class NotificationActivity : AppCompatActivity() {
         }
     }
 
-    private fun markAllAsRead(studentId: Int) {
+    private fun markAllAsRead(studentUid: String) {
         lifecycleScope.launch {
-            repository.markAllAsRead(studentId)
+            repository.markAllAsRead(studentUid)
             Snackbar.make(binding.root, "All notifications marked as read", Snackbar.LENGTH_SHORT).show()
         }
     }

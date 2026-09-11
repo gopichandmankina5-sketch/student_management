@@ -9,11 +9,11 @@ import com.example.studentmanagement.utils.Constants
  * Responsibilities:
  * - Persist login state across app restarts
  * - Store student ID and display info for quick access
- * - Store the auth token for API calls (when Member 4's backend is live)
+ * - Store the Firebase UID for Firestore document lookups
  * - Provide a clean logout (clear all session data)
  *
  * SECURITY NOTE:
- * - The auth token is stored in SharedPreferences (MODE_PRIVATE).
+ * - Session data is stored in SharedPreferences (MODE_PRIVATE).
  * - For higher security, consider using EncryptedSharedPreferences
  *   (androidx.security.crypto) in a production app.
  */
@@ -38,7 +38,8 @@ class SessionManager(context: Context) {
      * @param studentId The local or backend-assigned student ID.
      * @param name      The student's display name.
      * @param email     The student's email address.
-     * @param token     The JWT/auth token from the backend (null for local mock).
+     * @param token     The Firebase UID used as the auth token.
+     * @param role      The user's role: STUDENT, FACULTY, or ADMIN.
      */
     fun saveSession(
         studentId: Long,
@@ -54,7 +55,11 @@ class SessionManager(context: Context) {
             .putString(Constants.KEY_STUDENT_EMAIL, email)
             .putString(KEY_ROLE, role)
             .apply {
-                if (token != null) putString(Constants.KEY_AUTH_TOKEN, token)
+                // token here is the Firebase UID — store as both auth token and UID
+                if (token != null) {
+                    putString(Constants.KEY_AUTH_TOKEN, token)
+                    putString(Constants.KEY_UID, token)
+                }
             }
             .apply()
     }
@@ -81,11 +86,7 @@ class SessionManager(context: Context) {
     fun getRole(): String =
         prefs.getString(KEY_ROLE, "STUDENT") ?: "STUDENT"
 
-    /**
-     * Returns the auth token for API calls.
-     * Format for use: "Bearer $token"
-     * Will be null until Member 4's backend is integrated.
-     */
+    /** Returns the auth token (Firebase UID) stored during login/register. */
     fun getAuthToken(): String? =
         prefs.getString(Constants.KEY_AUTH_TOKEN, null)
 
@@ -94,6 +95,27 @@ class SessionManager(context: Context) {
         val token = getAuthToken() ?: return ""
         return "Bearer $token"
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // Firebase UID — primary key for ALL Firestore operations
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Explicitly saves the Firebase Authentication UID.
+     * This is the canonical identity used for all Firestore document lookups.
+     * Called separately after login/register to ensure the UID is always current.
+     */
+    fun saveUid(uid: String) {
+        prefs.edit().putString(Constants.KEY_UID, uid).apply()
+    }
+
+    /**
+     * Returns the Firebase Authentication UID.
+     * This is the canonical identity for ALL Firestore queries — never use
+     * the integer studentId for Firestore document lookups.
+     * Returns empty string if not logged in.
+     */
+    fun getUid(): String = prefs.getString(Constants.KEY_UID, "") ?: ""
 
     // ─────────────────────────────────────────────────────────────
     // Update name (called after profile edit)

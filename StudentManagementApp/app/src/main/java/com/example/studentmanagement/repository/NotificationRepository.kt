@@ -8,6 +8,7 @@ import com.example.studentmanagement.database.NotificationEntity
 import com.example.studentmanagement.model.MarkReadRequest
 import com.example.studentmanagement.model.Notification
 import com.example.studentmanagement.model.NotificationType
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.Dispatchers
@@ -16,95 +17,110 @@ import kotlinx.coroutines.withContext
 
 /**
  * Repository for notifications.
+ *
+ * Firestore is the source of truth.
+ * Room is used as a local offline cache.
+ *
+ * CRITICAL: Firestore documents use "studentUid" (string Firebase UID).
+ * Room uses integer studentId as a local cache key only.
  */
 class NotificationRepository(private val context: Context) {
 
     private val dao            = AppDatabase.getInstance(context).notificationDao()
     private val sessionManager = SessionManager(context)
     private val firestore      = FirebaseFirestore.getInstance()
+    private val auth           = FirebaseAuth.getInstance()
 
     sealed class Result<out T> {
         data class Success<T>(val data: T) : Result<T>()
         data class Error(val message: String) : Result<Nothing>()
     }
 
-    fun observeNotifications(studentId: Int): Flow<List<NotificationEntity>> =
-        dao.getNotificationsByStudentId(studentId)
+    fun observeNotifications(studentUid: String): Flow<List<NotificationEntity>> =
+        dao.getNotificationsByStudentId(studentUid)
 
-    fun observeUnreadCount(studentId: Int): Flow<Int> =
-        dao.observeUnreadCount(studentId)
+    fun observeUnreadCount(studentUid: String): Flow<Int> =
+        dao.observeUnreadCount(studentUid)
 
-    suspend fun loadNotifications(studentId: Int): Result<List<NotificationEntity>> =
+    suspend fun loadNotifications(studentUid: String): Result<List<NotificationEntity>> =
         withContext(Dispatchers.IO) {
-            try {
-                val snapshot = firestore.collection("notifications")
-                    .whereEqualTo("studentId", studentId)
-                    .get()
-                    .await()
-                
-                val apiData = snapshot.documents.mapNotNull { doc ->
-                    val data = doc.data ?: return@mapNotNull null
-                    NotificationEntity(
-                        id = doc.id.hashCode(),
-                        studentId = studentId,
-                        title = data["title"] as? String ?: "",
-                        message = data["message"] as? String ?: "",
-                        type = data["type"] as? String ?: "INFO",
-                        createdAt = data["createdAt"] as? String ?: "",
-                        isRead = data["isRead"] as? Boolean ?: false,
-                        relatedAssignmentId = (data["relatedAssignmentId"] as? Long)?.toInt()
-                    )
+            val uid = auth.currentUser?.uid
+                ?: sessionManager.getUid().takeIf { it.isNotEmpty() }
+
+            if (uid != null) {
+                try {
+                    val snapshot = firestore.collection("notifications")
+                        .whereEqualTo("studentUid", uid)
+                        .get()
+                        .await()
+
+                    val apiData = snapshot.documents.mapNotNull { doc ->
+                        val data = doc.data ?: return@mapNotNull null
+                        NotificationEntity(
+                            id = doc.id,
+                            studentUid = uid,
+                            title = data["title"] as? String ?: "",
+                            message = data["message"] as? String ?: "",
+                            type = data["type"] as? String ?: "GENERAL",
+                            createdAt = data["createdAt"] as? String ?: "",
+                            isRead = data["isRead"] as? Boolean ?: false,
+                            relatedAssignmentId = data["relatedAssignmentId"] as? String
+                        )
+                    }
+
+                    if (apiData.isNotEmpty()) {
+                        dao.insertAll(apiData)
+                    }
+                } catch (e: Exception) {
+                    // Firestore unavailable
                 }
-                
-                if (apiData.isNotEmpty()) {
-                    dao.insertAll(apiData)
-                }
-            } catch (e: Exception) {
-                // API unavailable — Room data already available
             }
 
-            Result.Success(dao.getNotificationsByStudentIdOnce(studentId))
+            Result.Success(dao.getNotificationsByStudentIdOnce(studentUid))
         }
 
-    suspend fun markAsRead(notificationId: Int): Result<Unit> =
+    suspend fun markAsRead(notificationId: String): Result<Unit> =
         withContext(Dispatchers.IO) {
             dao.markAsRead(notificationId)
-            try {
-                val snapshot = firestore.collection("notifications").get().await()
-                val targetDoc = snapshot.documents.find { it.id.hashCode() == notificationId }
-                
-                if (targetDoc != null) {
-                    firestore.collection("notifications").document(targetDoc.id)
+            val uid = auth.currentUser?.uid ?: sessionManager.getUid().takeIf { it.isNotEmpty() }
+            if (uid != null) {
+                try {
+                    firestore.collection("notifications").document(notificationId)
                         .update("isRead", true).await()
-                }
-            } catch (e: Exception) { /* API unavailable */ }
+                } catch (e: Exception) { /* Firestore unavailable */ }
+            }
             Result.Success(Unit)
         }
 
-    suspend fun markAllAsRead(studentId: Int): Result<Unit> =
+    suspend fun markAllAsRead(studentUid: String): Result<Unit> =
         withContext(Dispatchers.IO) {
-            dao.markAllAsRead(studentId)
-            try {
-                val snapshot = firestore.collection("notifications")
-                    .whereEqualTo("studentId", studentId)
-                    .whereEqualTo("isRead", false)
-                    .get()
-                    .await()
-                
-                val batch = firestore.batch()
-                for (doc in snapshot.documents) {
-                    batch.update(doc.reference, "isRead", true)
-                }
-                batch.commit().await()
-            } catch (e: Exception) { /* API unavailable */ }
+            dao.markAllAsRead(studentUid)
+            val uid = auth.currentUser?.uid ?: sessionManager.getUid().takeIf { it.isNotEmpty() }
+            if (uid != null) {
+                try {
+                    val snapshot = firestore.collection("notifications")
+                        .whereEqualTo("studentUid", uid)
+                        .whereEqualTo("isRead", false)
+                        .get()
+                        .await()
+
+                    val batch = firestore.batch()
+                    for (doc in snapshot.documents) {
+                        batch.update(doc.reference, "isRead", true)
+                    }
+                    if (snapshot.documents.isNotEmpty()) {
+                        batch.commit().await()
+                    }
+                } catch (e: Exception) { /* Firestore unavailable */ }
+            }
             Result.Success(Unit)
         }
 
-    suspend fun getUnreadCount(studentId: Int): Int =
-        withContext(Dispatchers.IO) { dao.getUnreadCount(studentId) }
+    suspend fun getUnreadCount(studentUid: String): Int =
+        withContext(Dispatchers.IO) { dao.getUnreadCount(studentUid) }
 
     suspend fun getRecentNotifications(
-        studentId: Int, limit: Int = 5
+        studentUid: String, limit: Int = 5
     ): List<NotificationEntity> =
-        withContext(Dispatchers.IO) { dao.getRecentNotifications(studentId, limit) }
+        withContext(Dispatchers.IO) { dao.getRecentNotifications(studentUid, limit) }
 }

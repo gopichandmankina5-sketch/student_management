@@ -16,6 +16,8 @@ object Constants {
     const val KEY_STUDENT_NAME = "name"
     const val KEY_STUDENT_EMAIL = "email"
     const val KEY_AUTH_TOKEN = "auth_token"
+    const val KEY_UID = "firebase_uid"   // Firebase Authentication UID for Firestore lookups
+
 
     // ─────────────────────────────────────────────────────────────
     // Intent / Bundle Extras
@@ -33,8 +35,9 @@ object Constants {
     const val DB_NAME = "student_management.db"
     // Increment this whenever the Room schema changes and add a Migration.
     // v1 → Member 1 (students table)
-    // v2 → Member 3 (assignments + notifications tables)
-    const val DB_VERSION = 2
+    // v2 → Member 3 original (assignments + notifications tables with Int IDs)
+    // v3 → Member 3 updated (assignments + notifications migrated to String UIDs)
+    const val DB_VERSION = 3
 
     // ─────────────────────────────────────────────────────────────
     // Validation Rules

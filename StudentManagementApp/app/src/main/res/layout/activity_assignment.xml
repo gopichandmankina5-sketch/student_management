@@ -70,7 +70,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipAll"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.App.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:checked="true"
@@ -79,7 +79,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipUpcoming"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.App.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Upcoming"
@@ -87,7 +87,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipDueToday"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.App.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Due Today"
@@ -95,7 +95,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipNotSubmitted"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.App.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Not Submitted"
@@ -103,7 +103,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipSubmitted"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.App.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Submitted"
@@ -111,7 +111,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipOverdue"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.App.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Overdue"

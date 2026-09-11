@@ -1,0 +1,133 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserRole() {
+      // Allow read if user document exists, otherwise default to null
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'ADMIN';
+    }
+    
+    function isFaculty() {
+      return isAuthenticated() && getUserRole() == 'FACULTY';
+    }
+    
+    function isStudent() {
+      return isAuthenticated() && getUserRole() == 'STUDENT';
+    }
+
+    // ----------------------------------------------------------------------
+    // USERS (Roles/Profiles)
+    // ----------------------------------------------------------------------
+    match /users/{userId} {
+      // Anyone can read their own profile. Admins can read all.
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      // Only Admin can create new users with arbitrary roles. Students can only create STUDENT roles during registration.
+      allow create: if isAuthenticated() && (isAdmin() || (request.auth.uid == userId && request.resource.data.role == 'STUDENT'));
+      allow update: if isAuthenticated() && (isAdmin() || (request.auth.uid == userId && request.resource.data.role == resource.data.role));
+      allow delete: if isAdmin();
+    }
+    
+    match /students/{studentId} {
+      // Students can read their own. Admins/Faculty can read all students.
+      allow read: if isAuthenticated() && (request.auth.uid == studentId || isAdmin() || isFaculty());
+      allow create: if isAuthenticated() && request.auth.uid == studentId; // Self-registration
+      allow update, delete: if isAdmin();
+    }
+
+    match /faculty/{facultyId} {
+      // Faculty can read their own. Admins/Students can read all faculty (to see who teaches courses).
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------------------------
+    // COURSES (Admin manages, everyone reads)
+    // ----------------------------------------------------------------------
+    match /courses/{courseId} {
+      // Everyone can see available courses
+      allow read: if isAuthenticated();
+      // Only Admin can create, update (assign faculty), or delete courses
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------------------------
+    // COURSE ENROLLMENTS (Member 2 stub)
+    // ----------------------------------------------------------------------
+    match /course_enrollments/{enrollmentId} {
+      allow read: if isAuthenticated();
+      // Admin handles enrollments.
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------------------------
+    // ASSIGNMENTS
+    // ----------------------------------------------------------------------
+    match /assignments/{assignmentId} {
+      // Students can read their own assignments.
+      // Faculty can read assignments they created.
+      // Admins can read all.
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        (isFaculty() && resource.data.facultyUid == request.auth.uid) ||
+        (isStudent() && resource.data.studentUid == request.auth.uid)
+      );
+      
+      // Only Faculty can create assignments (and only for themselves)
+      allow create: if isFaculty() && request.resource.data.facultyUid == request.auth.uid;
+      
+      // Faculty can update their own assignments (e.g. grading).
+      // Students can update their own assignments (e.g. submitting), but only specific fields.
+      allow update: if isAuthenticated() && (
+        (isFaculty() && resource.data.facultyUid == request.auth.uid) ||
+        (isStudent() && resource.data.studentUid == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['submissionStatus', 'submittedDate']))
+      );
+      
+      // Faculty can delete their own assignments. Admins can delete any.
+      allow delete: if isAuthenticated() && (
+        isAdmin() || 
+        (isFaculty() && resource.data.facultyUid == request.auth.uid)
+      );
+    }
+
+    // ----------------------------------------------------------------------
+    // NOTIFICATIONS
+    // ----------------------------------------------------------------------
+    match /notifications/{notificationId} {
+      // Users can only read their own notifications
+      allow read: if isAuthenticated() && resource.data.studentUid == request.auth.uid;
+      // System/Admin/Faculty can create notifications
+      allow create: if isAuthenticated() && (isAdmin() || isFaculty());
+      // Users can update their own notifications (mark as read)
+      allow update: if isAuthenticated() && resource.data.studentUid == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------------------------
+    // ATTENDANCE
+    // ----------------------------------------------------------------------
+    match /attendance/{attendanceId} {
+      // Students can read ONLY their own attendance
+      // Faculty can read attendance for courses they own
+      allow read: if isAuthenticated() && (
+        (isStudent() && resource.data.studentUid == request.auth.uid) ||
+        (isFaculty() && resource.data.facultyUid == request.auth.uid) ||
+        isAdmin()
+      );
+
+      // Faculty can create/update attendance ONLY for their own courses
+      allow create, update: if isFaculty() && request.resource.data.facultyUid == request.auth.uid;
+      
+      allow delete: if isAdmin();
+    }
+
+  }
+}

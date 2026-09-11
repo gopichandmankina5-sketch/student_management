@@ -76,8 +76,8 @@
         <item name="strokeWidth">0dp</item>
     </style>
 
-    <!-- Filter Chip -->
-    <style name="Widget.Material3.Chip.Filter" parent="Widget.Material3.Chip.Filter">
+    <!-- Filter Chip — NOTE: must NOT inherit from itself (circular parent causes StackOverflowError) -->
+    <style name="Widget.App.Chip.Filter" parent="Widget.Material3.Chip.Filter">
         <item name="chipBackgroundColor">@color/colorSurfaceVariant</item>
         <item name="checkedIconVisible">true</item>
         <item name="chipCornerRadius">8dp</item>

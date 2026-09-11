@@ -21,16 +21,16 @@ interface AssignmentDao {
     // ─────────────────────────────────────────────────────────────
 
     /** Observe all assignments for a student, ordered by deadline ascending. */
-    @Query("SELECT * FROM assignments WHERE studentId = :studentId ORDER BY deadline ASC")
-    fun getAssignmentsByStudentId(studentId: Int): Flow<List<AssignmentEntity>>
+    @Query("SELECT * FROM assignments WHERE studentUid = :studentUid ORDER BY deadline ASC")
+    fun getAssignmentsByStudentId(studentUid: String): Flow<List<AssignmentEntity>>
 
     /** One-shot fetch of all assignments for a student. */
-    @Query("SELECT * FROM assignments WHERE studentId = :studentId ORDER BY deadline ASC")
-    suspend fun getAssignmentsByStudentIdOnce(studentId: Int): List<AssignmentEntity>
+    @Query("SELECT * FROM assignments WHERE studentUid = :studentUid ORDER BY deadline ASC")
+    suspend fun getAssignmentsByStudentIdOnce(studentUid: String): List<AssignmentEntity>
 
     /** Fetch a single assignment by its primary key. */
     @Query("SELECT * FROM assignments WHERE id = :assignmentId LIMIT 1")
-    suspend fun getAssignmentById(assignmentId: Int): AssignmentEntity?
+    suspend fun getAssignmentById(assignmentId: String): AssignmentEntity?
 
     /**
      * Full-text search across title, course name, and course code.
@@ -38,31 +38,31 @@ interface AssignmentDao {
      */
     @Query("""
         SELECT * FROM assignments
-        WHERE studentId = :studentId
+        WHERE studentUid = :studentUid
           AND (title LIKE :query OR courseName LIKE :query OR courseCode LIKE :query)
         ORDER BY deadline ASC
     """)
-    suspend fun searchAssignments(studentId: Int, query: String): List<AssignmentEntity>
+    suspend fun searchAssignments(studentUid: String, query: String): List<AssignmentEntity>
 
     /** Count of upcoming (future deadline, not submitted) assignments for a student. */
     @Query("""
         SELECT COUNT(*) FROM assignments
-        WHERE studentId = :studentId
+        WHERE studentUid = :studentUid
           AND deadline >= :today
           AND submissionStatus != 'SUBMITTED'
     """)
-    suspend fun getUpcomingAssignmentCount(studentId: Int, today: String): Int
+    suspend fun getUpcomingAssignmentCount(studentUid: String, today: String): Int
 
     /** The nearest upcoming assignment. */
     @Query("""
         SELECT * FROM assignments
-        WHERE studentId = :studentId
+        WHERE studentUid = :studentUid
           AND deadline >= :today
           AND submissionStatus != 'SUBMITTED'
         ORDER BY deadline ASC
         LIMIT 1
     """)
-    suspend fun getNextAssignment(studentId: Int, today: String): AssignmentEntity?
+    suspend fun getNextAssignment(studentUid: String, today: String): AssignmentEntity?
 
     // ─────────────────────────────────────────────────────────────
     // Write
@@ -87,16 +87,16 @@ interface AssignmentDao {
         WHERE id = :assignmentId
     """)
     suspend fun updateSubmissionStatus(
-        assignmentId: Int,
+        assignmentId: String,
         status: String,
         submittedDate: String?
     )
 
     /** Delete a specific assignment. */
     @Query("DELETE FROM assignments WHERE id = :assignmentId")
-    suspend fun deleteById(assignmentId: Int)
+    suspend fun deleteById(assignmentId: String)
 
     /** Delete all assignments for a student (used on logout / data reset). */
-    @Query("DELETE FROM assignments WHERE studentId = :studentId")
-    suspend fun deleteAllForStudent(studentId: Int)
+    @Query("DELETE FROM assignments WHERE studentUid = :studentUid")
+    suspend fun deleteAllForStudent(studentUid: String)
 }

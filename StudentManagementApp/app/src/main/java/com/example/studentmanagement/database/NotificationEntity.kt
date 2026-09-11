@@ -13,15 +13,15 @@ import androidx.room.PrimaryKey
  */
 @Entity(
     tableName = "notifications",
-    indices = [Index(value = ["studentId"]), Index(value = ["isRead"])]
+    indices = [Index(value = ["studentUid"]), Index(value = ["isRead"])]
 )
 data class NotificationEntity(
-    @PrimaryKey val id: Int,
-    val studentId: Int,
+    @PrimaryKey val id: String,
+    val studentUid: String,
     val title: String,
     val message: String,
     val type: String,                       // NotificationType.name
     val createdAt: String,                  // yyyy-MM-dd'T'HH:mm:ss or yyyy-MM-dd
     val isRead: Boolean = false,
-    val relatedAssignmentId: Int? = null    // non-null → deep-link to assignment
+    val relatedAssignmentId: String? = null    // non-null → deep-link to assignment
 )

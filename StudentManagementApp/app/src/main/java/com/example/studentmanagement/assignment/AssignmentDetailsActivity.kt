@@ -15,11 +15,13 @@ import com.example.studentmanagement.utils.DateUtils
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 
+import com.example.studentmanagement.auth.SessionManager
+
 class AssignmentDetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAssignmentDetailsBinding
     private lateinit var repository: AssignmentRepository
-    private var assignmentId: Int = -1
+    private var assignmentId: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,11 +29,11 @@ class AssignmentDetailsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         repository = AssignmentRepository(this)
-        assignmentId = intent.getIntExtra(Constants.EXTRA_ASSIGNMENT_ID, -1)
+        assignmentId = intent.getStringExtra(Constants.EXTRA_ASSIGNMENT_ID) ?: ""
 
         setupToolbar()
 
-        if (assignmentId != -1) {
+        if (assignmentId.isNotEmpty()) {
             loadAssignmentDetails()
         } else {
             Toast.makeText(this, "Invalid assignment ID", Toast.LENGTH_SHORT).show()
@@ -128,7 +130,8 @@ class AssignmentDetailsActivity : AppCompatActivity() {
         binding.btnMarkSubmitted.text = "SUBMITTING..."
         
         lifecycleScope.launch {
-            when (val result = repository.markAsSubmitted(assignmentId)) {
+            val studentUid = SessionManager(this@AssignmentDetailsActivity).getUid()
+            when (val result = repository.submitAssignment(assignmentId, studentUid)) {
                 is AssignmentRepository.Result.Success -> {
                     Snackbar.make(binding.root, "Assignment marked as submitted", Snackbar.LENGTH_SHORT).show()
                     loadAssignmentDetails() // Reload UI

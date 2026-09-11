@@ -5,7 +5,6 @@
 
     <application
         android:allowBackup="true"
-        android:usesCleartextTraffic="true"
         android:label="Student Management"
         android:supportsRtl="true"
         android:theme="@style/Theme.StudentManagement">
@@ -14,6 +13,22 @@
         <activity android:name=".dashboard.DashboardActivity" />
         <activity android:name=".dashboard.FacultyDashboardActivity" />
         <activity android:name=".dashboard.AdminDashboardActivity" />
+        <activity android:name=".dashboard.ManageStudentsActivity" />
+        <activity android:name=".dashboard.ManageFacultyActivity" />
+        <activity android:name=".dashboard.CreateFacultyActivity" />
+        <activity android:name=".dashboard.FacultyCoursesActivity" />
+        
+        <!-- Member 3 Activities -->
+        <activity android:name=".dashboard.ManageCoursesActivity" />
+        <activity android:name=".dashboard.CourseDetailActivity" />
+        <activity android:name=".assignment.FacultyAssignmentListActivity" />
+        <activity android:name=".assignment.CreateAssignmentActivity" />
+        <activity android:name=".dashboard.StudentCoursesActivity" />
+        
+        <activity android:name=".faculty.FacultyStudentsActivity" />
+        <activity android:name=".faculty.FacultyAttendanceActivity" />
+        <activity android:name=".dashboard.StudentAttendanceActivity" />
+        
         <activity android:name=".auth.RegisterActivity" />
         <activity android:name=".auth.LoginActivity" />
         <activity android:name=".assignment.AssignmentActivity" />
